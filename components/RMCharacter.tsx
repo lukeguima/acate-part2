@@ -12,17 +12,19 @@ import {
 
 import {
   useEffect,
-  useState
+  useState,
 } from 'react';
 
 import Api from '../services/Api';
 
 import { ICharacter } from '../types';
+import { StatusBar } from 'expo-status-bar';
 
 function RMCharacter() {
 
   const [character, setCharacter] = useState<ICharacter[]>();
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(false);
+  const [characterDetails, setCharacterDetails] = useState<ICharacter[] | undefined>();
 
   useEffect(() => {
     Api.get('character').then(
@@ -32,42 +34,30 @@ function RMCharacter() {
     )
   }, [])
 
+  const getDataCharacter = (id: Number) => {
+    const result: ICharacter[] | undefined = character?.filter(item => item.id == id)
+    setCharacterDetails(result)
+    console.log(result)
+  }
+
   return (
     <SafeAreaView
       style={{ backgroundColor: '#7B25F0' }}
     >
-      <ScrollView>
+      <StatusBar backgroundColor="#7B25F0" />
+      <ScrollView style={{ marginTop: 24 }}>
         <View
           style={styles.container}
         >
+
           {character?.map(
             (item, index) => (
-              <Pressable
-                onPress={() => { setShowModal(true) }}
+              <View
                 style={styles.card}
                 key={index}
               >
-                <Modal
-                  animationType='slide'
-                  visible={showModal}>
-                  <View
-                    style={styles.modal}
-                  >
-                    <Text
-                      style={styles.text}
-                    >
-                      {item.name}
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => { setShowModal(false) }}
-                  >
-                    <Text>exit</Text>
-                  </Pressable>
-                </Modal>
-
                 <Image
-                  style={{ width: 100, height: 100 }}
+                  style={{ width: 100, height: 100, borderRadius: 100 }}
                   source={{ uri: item.image }}
                 />
                 <View
@@ -88,10 +78,52 @@ function RMCharacter() {
                   >
                     {item.gender}
                   </Text>
+                  <Pressable
+                    style={styles.buttonClose}
+                    onPress={() => {
+                      getDataCharacter(item.id)
+                      setShowModal(!showModal)
+                    }}
+                  >
+                    <Text
+                      style={styles.text}
+                    > ver mais </Text>
+                  </Pressable>
                 </View>
-              </Pressable>
+              </View>
             )
           )}
+          <Modal
+            animationType='slide'
+            visible={showModal}
+            onRequestClose={
+              () => setShowModal(!showModal)
+            }
+          >
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#7B25F0'
+            }}>
+              <Text
+                style={styles.text}
+              >SELECIONADO:</Text>
+              <Text
+                style={styles.textName}>
+                {characterDetails != undefined ? characterDetails[0].name : null}
+              </Text>
+              <Pressable
+                style={styles.buttonClose}
+                onPress={() => setShowModal(!showModal)}
+              >
+                <Text
+                  style={styles.text}
+                >fechar</Text>
+              </Pressable>
+            </View>
+          </Modal>
+
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -114,11 +146,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     margin: 12
   },
-  modal: {
-    margin: 20,
-    backgroundColor: '#7B25F0',
-    height: 200
-  },
   textBox: {
     flex: 1,
     paddingHorizontal: 15
@@ -129,7 +156,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   text: {
-    color: '#fff'
+    color: '#fff',
+    fontWeight: "500"
+  },
+  buttonClose: {
+    marginTop: 12,
+    height: 45,
+    width: Dimensions.get('window').width - 200,
+    borderColor: '#FFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 })
 
